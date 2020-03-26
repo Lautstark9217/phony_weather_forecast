@@ -23,11 +23,14 @@ typedef unsigned char lByte;
 
 const int CQ_CITY_IN=1;
 const int CQ_CITY_NOT_FOUND=2;
+
 const int DQ_ASK_ONE_DAY=1;
 const int DQ_ASK_THREE_DAYS=2;
+
 const int RP_WEATHER_QUERY=3;
 const char RP_ONE_DAY='A';
 const char RP_THREE_DAYS='B';
+
 const char* WEATHER_NAME[8] = {  
     "overcast","sunny","cloudy","rain"
     ,"fog","rainstorm","thunderstorm","breeze"
