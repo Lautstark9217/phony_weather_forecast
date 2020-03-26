@@ -1,5 +1,6 @@
 #ifndef NPLAB3
 #define NPLAB3
+
 #include    <sys/types.h>    
 #include    <sys/socket.h>   
 #include    <netinet/in.h>   
@@ -58,4 +59,9 @@ struct Reply
     lByte nTHDay;
     lByte daysAndWeathers[6];
 };
+
+int cqSize=sizeof(struct CityQuery);
+int dqSize=sizeof(struct DateQuery);
+int rpSize=sizeof(struct Reply);
+
 #endif
