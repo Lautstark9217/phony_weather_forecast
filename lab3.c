@@ -108,9 +108,9 @@ int main()
         else
         {
             func_query_City(cityName,&cq);
-            send(sockfd,(void*)(&cq),cqSize,0);
+            if(send(sockfd,(void*)(&cq),cqSize,0)<0) return -1;
 
-            recv(sockfd,buffer,rpBfSize,0);
+            if(recv(sockfd,buffer,rpBfSize,0)<0) return -1;
             memcpy(&rp,buffer,rpSize);
             memset(buffer,0,rpBfSize);
 
@@ -162,9 +162,9 @@ int main()
                         printf("input error!\n");
                         continue;
                     }
-                    send(sockfd,(void*)(&dq),dqSize,0);
+                    if(send(sockfd,(void*)(&dq),dqSize,0)<0) return -1;
 
-                    recv(sockfd,buffer,rpBfSize,0);
+                    if(recv(sockfd,buffer,rpBfSize,0)<0) return -1;
                     memcpy(&rp,buffer,rpSize);
                     memset(buffer,0,rpBfSize);
                     int weathParseRet=parse_reply(&rp,cityName);
