@@ -44,6 +44,7 @@ void func_query_Date(int queryType,int date2Query,char* city2Query, struct DateQ
         int t=0x0202;
         memcpy(dq->dateQueryType,&t,2);
         memcpy(dq->cityName,city2Query,strlen(city2Query));
+        memcpy(&(dq->dateNum),&date2Query,3);
     }
 }
 int parse_reply(struct Reply* rp,const char cityName[])
@@ -123,22 +124,30 @@ int main()
                     printf("(r)back,(c)cls,(#)exit\n");
                     printf("===================================================\n");
                     char dqType=0;
+                    char inputStr[100];
                     scanf("%c",&dqType);
-                    if(dqType=='c') system("clear");
+                    scanf("%s",inputStr);
+                    if(strlen(inputStr)>1)
+                    {
+                        printf("input error!\n");
+                        continue;                        
+                    }
+                    dqType=inputStr[0];
+                    if(dqType=='c') {system("clear");continue;}
                     else if(dqType=='r') {system("clear");break;}
                     else if(dqType=='#') goto END;
                     else if(dqType=='1') func_query_Date(DQ_ASK_ONE_DAY,1,cityName,&dq);
                     else if(dqType=='2') func_query_Date(DQ_ASK_THREE_DAYS,3,cityName,&dq);
                     else if(dqType=='3')
                     {
-                        int nthDay=0;
+                        char nthDay[100];
                         while(1)
                         {
                             printf("Please enter the day number(below 10, e.g. 1 means today):");
-                            scanf("%d",&nthDay);
-                            if(nthDay>0 && nthDay<10)
+                            scanf("%s",nthDay);
+                            if(strlen(nthDay)==1 && nthDay[0]>'0' && nthDay[0]<='9')
                             {
-                                func_query_Date(DQ_ASK_ONE_DAY,nthDay,cityName,&dq);
+                                func_query_Date(DQ_ASK_ONE_DAY,nthDay[0]-'0',cityName,&dq);
                                 break;
                             }
                             else printf("Input error\n");

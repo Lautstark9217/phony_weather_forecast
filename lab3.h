@@ -32,9 +32,9 @@ const int RP_WEATHER_QUERY=3;
 const char RP_ONE_DAY='A';
 const char RP_THREE_DAYS='B';
 
-const char* WEATHER_NAME[8] = {  
+const char* WEATHER_NAME[9] = {  
     "overcast","sunny","cloudy","rain"
-    ,"fog","rainstorm","thunderstorm","breeze"
+    ,"fog","rainstorm","thunderstorm","breeze","???"
 };
 
 struct CityQuery
