@@ -63,5 +63,6 @@ struct Reply
 int cqSize=sizeof(struct CityQuery);
 int dqSize=sizeof(struct DateQuery);
 int rpSize=sizeof(struct Reply);
+const int rpBfSize=127;
 
 #endif

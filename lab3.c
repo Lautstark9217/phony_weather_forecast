@@ -18,6 +18,7 @@ int tcp_client(char *address, int port) {
 
     return socket_fd;
 }
+
 void func_query_City(char* city2Query,struct CityQuery *cq)
 {
     int cityNameLength=strlen(city2Query);
@@ -27,8 +28,10 @@ void func_query_City(char* city2Query,struct CityQuery *cq)
     memcpy(cq->cityQueryType,&t,2);
     memcpy(cq->cityName,city2Query,cityNameLength);
 }
+
 void func_query_Date(int queryType,int date2Query,char* city2Query, struct DateQuery *dq)
 {
+    memset(dq,0,dqSize);
     if(queryType==DQ_ASK_ONE_DAY)
     {
         int t=0x0102;//small endian
@@ -45,34 +48,41 @@ void func_query_Date(int queryType,int date2Query,char* city2Query, struct DateQ
 }
 int parse_reply(struct Reply* rp,const char cityName[])
 {
+    //printf("replytype %hd\n",rp->dateQueryType);
     if(rp->replyType==CQ_CITY_IN)  return CQ_CITY_IN;
     else if(rp->replyType==CQ_CITY_NOT_FOUND)
     {
-        printf("Sorry, Server does not have weather information for city %s!",cityName);
+        printf("Sorry, Server does not have weather information for city %s!\n",cityName);
         return CQ_CITY_NOT_FOUND;
     }
     else if(rp->replyType==RP_WEATHER_QUERY)
     {
         int repYear=0,repMonth=0,repDate=0;
-        repYear+=*(unsigned short*)(rp->year);
-        repMonth+=rp->month;
-        repDate+=rp->day;
+        repYear=rp->year[1]+rp->year[0]*256;
+        repMonth=rp->month;
+        repDate=rp->day;
         printf("City: %s  Today is: %d/%d/%d  Weather information is as follows:\n",cityName,repYear,repMonth,repDate);
         if(rp->dateQueryType==RP_ONE_DAY)
         {
             if(rp->nTHDay==1)
-                printf("Today's Weather is: %s;  Temp:%d",WEATHER_NAME[rp->daysAndWeathers[0]],rp->daysAndWeathers[1]);
+                printf("Today's Weather is: %s;  Temp:%d\n",WEATHER_NAME[rp->daysAndWeathers[0]],rp->daysAndWeathers[1]);
             else
-                printf("The %dth day's Weather is: %s;  Temp:%d",rp->nTHDay,WEATHER_NAME[rp->daysAndWeathers[0]],rp->daysAndWeathers[1]);
+                printf("The %dth day's Weather is: %s;  Temp:%d\n",rp->nTHDay,WEATHER_NAME[rp->daysAndWeathers[0]],rp->daysAndWeathers[1]);
+            return 0;
         }
         else if(rp->dateQueryType==RP_THREE_DAYS)
         {
             for(int i=1;i<4;++i)
-                printf("The %dth day's Weather is: %s;  Temp:%d",i,WEATHER_NAME[rp->daysAndWeathers[i*2-2]],rp->daysAndWeathers[i*2-1]);
+                printf("The %dth day's Weather is: %s;  Temp:%d\n",i,WEATHER_NAME[rp->daysAndWeathers[i*2-2]],rp->daysAndWeathers[i*2-1]);
+            return 0;
         }
         else return -1;
     }
-    else return -1;
+    else
+    {
+        printf("errorparse\n");
+        return -1;
+    }
 }
 int main()
 {
@@ -81,7 +91,7 @@ int main()
     struct CityQuery cq;
     struct Reply rp;
     struct DateQuery dq;
-
+    lByte buffer[rpBfSize];
     //begin
     while(1)
     {
@@ -95,13 +105,69 @@ int main()
             func_query_City(cityName,&cq);
             send(sockfd,(void*)(&cq),cqSize,0);
 
-            recv(sockfd,&rp,rpSize,0);
-            
-            parse_reply(&rp,cityName);
+            recv(sockfd,buffer,rpBfSize,0);
+            memcpy(&rp,buffer,rpSize);
+            memset(buffer,0,rpBfSize);
+
+            int parseRet=parse_reply(&rp,cityName);
+            if(parseRet==CQ_CITY_IN)
+            {
+                //city in
+                system("clear");
+                while(1)
+                {
+                    printf("Please enter the given number to query\n");
+                    printf("1.today\n");
+                    printf("2.three days from today\n");
+                    printf("3.custom day by yourself\n");
+                    printf("(r)back,(c)cls,(#)exit\n");
+                    printf("===================================================\n");
+                    char dqType=0;
+                    scanf("%c",&dqType);
+                    if(dqType=='c') system("clear");
+                    else if(dqType=='r') {system("clear");break;}
+                    else if(dqType=='#') goto END;
+                    else if(dqType=='1') func_query_Date(DQ_ASK_ONE_DAY,1,cityName,&dq);
+                    else if(dqType=='2') func_query_Date(DQ_ASK_THREE_DAYS,3,cityName,&dq);
+                    else if(dqType=='3')
+                    {
+                        int nthDay=0;
+                        while(1)
+                        {
+                            printf("Please enter the day number(below 10, e.g. 1 means today):");
+                            scanf("%d",&nthDay);
+                            if(nthDay>0 && nthDay<10)
+                            {
+                                func_query_Date(DQ_ASK_ONE_DAY,nthDay,cityName,&dq);
+                                break;
+                            }
+                            else printf("Input error\n");
+                        }
+                    }
+                    else
+                    {
+                        printf("input error!\n");
+                        continue;
+                    }
+                    send(sockfd,(void*)(&dq),dqSize,0);
+
+                    recv(sockfd,buffer,rpBfSize,0);
+                    memcpy(&rp,buffer,rpSize);
+                    memset(buffer,0,rpBfSize);
+                    int weathParseRet=parse_reply(&rp,cityName);
+                }
+            }
+            else if(parseRet==CQ_CITY_NOT_FOUND) continue;
+            else
+            {
+                printf("cqerror\n");
+                return -1;
+            }
         }
         
     }
-    sleep(5);
+
+END:
     close(sockfd);
     return 0;
 }
