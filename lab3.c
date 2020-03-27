@@ -13,7 +13,7 @@ int tcp_client(char *address, int port) {
     socklen_t server_len = sizeof(server_addr);
     int connect_rt = connect(socket_fd, (struct sockaddr *) &server_addr, server_len);
     if (connect_rt < 0) {
-        //error(1, errno, "connect failed ");
+        printf("Can't connect to server 47.105.85.28!\n");
     }
 
     return socket_fd;
@@ -59,7 +59,7 @@ int parse_reply(struct Reply* rp,const char cityName[])
     else if(rp->replyType==RP_WEATHER_QUERY)
     {
         int repYear=0,repMonth=0,repDate=0;
-        repYear=rp->year[1]+rp->year[0]*256;
+        repYear=rp->year[1]+rp->year[0]*256;//network sequence
         repMonth=rp->month;
         repDate=rp->day;
         printf("City: %s  Today is: %d/%d/%d  Weather information is as follows:\n",cityName,repYear,repMonth,repDate);
@@ -88,7 +88,11 @@ int parse_reply(struct Reply* rp,const char cityName[])
 int main()
 {
     int sockfd=tcp_client("47.105.85.28",4321);
-    if(sockfd<0) return -1;
+    if(sockfd<0) 
+    {
+        printf("Can't connect to server 47.105.85.28!\n");
+        return -1;
+    }
     struct CityQuery cq;
     struct Reply rp;
     struct DateQuery dq;
@@ -125,7 +129,7 @@ int main()
                     printf("===================================================\n");
                     char dqType=0;
                     char inputStr[100];
-                    scanf("%c",&dqType);
+                    scanf("%c",&dqType);//???
                     scanf("%s",inputStr);
                     if(strlen(inputStr)>1)
                     {
@@ -164,6 +168,7 @@ int main()
                     memcpy(&rp,buffer,rpSize);
                     memset(buffer,0,rpBfSize);
                     int weathParseRet=parse_reply(&rp,cityName);
+                    if(weathParseRet==-1) printf("rperror\n");
                 }
             }
             else if(parseRet==CQ_CITY_NOT_FOUND) continue;
